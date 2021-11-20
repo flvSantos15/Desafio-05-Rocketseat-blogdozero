@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Head from 'next/head'
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -26,9 +27,14 @@ interface PostProps {
   post: Post;
 }
 
-// export default function Post() {
-//   // TODO
-// }
+export default function Post({post}: PostProps) {
+ return(
+   <>
+    <h1>test</h1>
+    {/* vai o post aqui*/}
+   </>
+ )
+}
 
 // export const getStaticPaths = async () => {
 //   const prismic = getPrismicClient();

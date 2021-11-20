@@ -1,4 +1,7 @@
 import { GetStaticProps } from 'next';
+import Head from 'next/head'
+import Prismic from '@prismicio/client'
+//importação do stripe
 
 import { getPrismicClient } from '../services/prismic';
 
@@ -24,13 +27,32 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-// export default function Home() {
-//   // TODO
-// }
+export default function Home({postsPagination}: HomeProps) {
+  return(
+    <>
+      <Head>
+        {/* Logo */}
+        <img src='./images/logo.svg'/>
+      </Head>
+      <main className={styles.contentContainer}>
+        {/* posts */}
+        <section>
+          <h4>text</h4>
+        </section>
+      </main>
 
-// export const getStaticProps = async () => {
-//   // const prismic = getPrismicClient();
-//   // const postsResponse = await prismic.query(TODO);
+    </>
+  )
+}
 
-//   // TODO
-// };
+export const getStaticProps = async () => {
+  const prismic = getPrismicClient();
+  const postsResponse = await prismic.query([
+    Prismic.predicates.at('document.type', 'pos') // pos é o id que vem do prismic
+  ], {
+    fetch: ['title', 'content'],
+    pageSize: 100,
+  });
+
+  // TODO
+};
