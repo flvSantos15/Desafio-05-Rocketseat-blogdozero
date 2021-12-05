@@ -6,8 +6,7 @@ import '../styles/globals.scss';
 function MyApp({ Component, pageProps }: AppProps): JSX.Element {
   return (
     <>
-      <Header />
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </>
   );
 }
