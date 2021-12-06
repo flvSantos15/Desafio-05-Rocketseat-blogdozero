@@ -1,5 +1,9 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head'
+import { RichText } from 'prismic-dom';
+import Prismic from '@prismicio/client'
+import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 import { getPrismicClient } from '../../services/prismic';
 
@@ -8,7 +12,7 @@ import Header from '../../components/Header/index'
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import { RichText } from 'prismic-dom';
+import { useRouter } from 'next/router';
 
 interface Post {
   first_publication_date: string | null;
@@ -31,29 +35,55 @@ interface PostProps {
   post: Post;
 }
 
-export default function Post({ post }: PostProps) {
-  console.log(post)
+export default function Post({ post }: PostProps): JSX.Element{
+  const totalWords = post.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split(' ').length
+
+    const words = contentItem.body.map(item => item.text.split(' ').length)
+    words.map(word => (total += word))
+    return total
+  }, 0)
+  
+  const readTime = Math.ceil(totalWords / 200)
+
+  const router = useRouter()
+
+  if(router.isFallback){
+    return <h1>Carregando...</h1>
+  }
+
+  const formatedDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    {
+      locale: ptBR
+    }
+  )
+
   return (
     <>
+      <Head>
+        <title>{post.data.title} | spacetraveling</title>
+      </Head>
       <Header />
 
       <img src='/test.png' alt='imagem' className={styles.banner} />
       <main className={commonStyles.container}>
         <div className={styles.post}>
           <div className={styles.postTop}>
-            <h1>Algum titulo de exemplo</h1>
+            <h1>{post.data.title}</h1>
             <ul>
               <li>
                 <FiCalendar />
-                12 Mar 2021
+                {formatedDate}
               </li>
               <li>
                 <FiUser />
-                Flavio Santos
+                {post.data.author}
               </li>
               <li>
                 <FiClock />
-                5 min
+                {`${readTime} min`}
               </li>
             </ul>
           </div>
@@ -77,11 +107,21 @@ export default function Post({ post }: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  //   const prismic = getPrismicClient();
-  //   const posts = await prismic.query(TODO);
+    const prismic = getPrismicClient();
+    const posts = await prismic.query([
+      Prismic.Predicates.at('document.type', 'posts'),
+    ]);
+
+    const paths = posts.results.map(post => {
+      return{
+        params: {
+          slug: post.uid,
+        }
+      }
+    })
 
   return {
-    paths: [],
+    paths,
     fallback: true,
   }
 };
