@@ -8,6 +8,7 @@ import Header from '../../components/Header/index'
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
+import { RichText } from 'prismic-dom';
 
 interface Post {
   first_publication_date: string | null;
@@ -31,6 +32,7 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
+  console.log(post)
   return (
     <>
       <Header />
@@ -55,39 +57,62 @@ export default function Post({ post }: PostProps) {
               </li>
             </ul>
           </div>
-
-          <article>
-            <h2>Titulo sessão</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur
-              adipisicing elit. <strong>Numquam quod</strong>, sunt
-              labore animi quis doloremque quia! Ab,
-              id reprehenderit facilis enim, sed
-              eaque quia laboriosam odio fugit minus
-              hic ipsum!
-              Lorem ipsum dolor sit amet, consectetur
-              adipisicing elit. <a href="#">Numquam quod</a>, sunt
-              labore animi quis doloremque quia! Ab,
-              id reprehenderit facilis enim, sed
-              eaque quia laboriosam odio fugit minus
-              hic ipsum!
-            </p>
-          </article>
+          {post.data.content.map(content => {
+            return (
+              <article key={content.heading}>
+                <h2>{content.heading}</h2>
+                <div 
+                  className={styles.postContent}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body)
+                  }}
+                />
+              </article>
+            )
+          })}
         </div>
       </main>
     </>
   )
 }
 
-// export const getStaticPaths = async () => {
-//   const prismic = getPrismicClient();
-//   const posts = await prismic.query(TODO);
+export const getStaticPaths: GetStaticPaths = async () => {
+  //   const prismic = getPrismicClient();
+  //   const posts = await prismic.query(TODO);
 
-//   // TODO
-// };
+  return {
+    paths: [],
+    fallback: true,
+  }
+};
 
-// export const getStaticProps = async context => {
-//   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+export const getStaticProps: GetStaticProps = async context => {
+  const prismic = getPrismicClient();
+  const { slug } = context.params;
+  const response = await prismic.getByUID('posts', String(slug), {});
 
-//   // TODO
-// };
+  const post = {
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
+    data: {
+      title: response.data.title,
+      subtitle: response.data.subtitle,
+      author: response.data.author,
+      banner: {
+        url: response.data.banner.url,
+      },
+      content: response.data.content.map(content => {
+        return {
+          heading: content.heading,
+          body: [...content.body],
+        }
+      }),
+    }
+  }
+
+  return {
+    props: {
+      post,
+    },
+  }
+};
